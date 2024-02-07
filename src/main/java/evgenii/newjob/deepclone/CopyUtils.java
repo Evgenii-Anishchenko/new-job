@@ -77,6 +77,10 @@ public class CopyUtils {
             return copyCollection((Collection<?>) original);
         }
 
+        if (original instanceof Map) {
+            return copyMap((Map<?, ?>) original);
+        }
+
         try {
             Object copy;
             if (!clazz.getDeclaredConstructors()[0].isAccessible()) {
@@ -181,4 +185,34 @@ public class CopyUtils {
 
         return copy;
     }
+
+    /**
+     * Handles copying for java.util.Map types.
+     * Determines the appropriate sub-type of Map and makes a new instance
+     * before recursively copying keys and values.
+     *
+     * @param original The Map object to be deep copied.
+     * @return The deep copied Map.
+     */
+    private static Map<?, ?> copyMap(Map<?, ?> original) {
+        Map<Object, Object> copy;
+        try {
+            // Attempt to create a new instance of the original map's runtime class
+            copy = original.getClass().getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot create a copy of the map of type " + original.getClass(), e);
+        }
+
+        copiedObjects.put(original, copy);
+
+        // Iterate through the original map, deep copying both keys and values
+        for (Map.Entry<?, ?> entry : original.entrySet()) {
+            Object keyCopy = copyObject(entry.getKey());
+            Object valueCopy = copyObject(entry.getValue());
+            copy.put(keyCopy, valueCopy);
+        }
+
+        return copy;
+    }
+
 }

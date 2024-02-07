@@ -4,16 +4,16 @@ package evgenii.newjob.deepclone.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RecursiveNode {
-    private String value;
-    private List<RecursiveNode> children;
+public class TreeNode {
+    private final String value;
+    private final List<TreeNode> children;
 
-    public RecursiveNode(String value) {
+    public TreeNode(String value) {
         this.value = value;
         this.children = new ArrayList<>();
     }
 
-    public void addChild(RecursiveNode child) {
+    public void addChild(TreeNode child) {
         this.children.add(child);
     }
 
@@ -21,7 +21,7 @@ public class RecursiveNode {
         return value;
     }
 
-    public List<RecursiveNode> getChildren() {
+    public List<TreeNode> getChildren() {
         return children;
     }
 }

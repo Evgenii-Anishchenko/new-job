@@ -3,86 +3,90 @@ package evgenii.newjob.assignment;
 
 import evgenii.newjob.deepclone.CopyUtils;
 import evgenii.newjob.deepclone.model.Man;
-import evgenii.newjob.deepclone.model.NestedList;
-import evgenii.newjob.deepclone.model.RecursiveNode;
+import evgenii.newjob.deepclone.model.NestedCollection;
+import evgenii.newjob.deepclone.model.TreeNode;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 class CopyUtilsTest {
 
     @Test
-    void deepCopy() {
-        String expectedName = "John";
-        int expectedAge = 25;
-        List<String> expectedFavoriteBooks = List.of("1984", "To Kill a Mockingbird");
+    void testDeepCopyMan() {
+        Man original = new Man("John Doe", 30, new ArrayList<>(Arrays.asList("Moby Dick", "War and Peace")));
+        Man copied = CopyUtils.deepCopy(original);
 
-        Man originalMan = new Man(expectedName, expectedAge, expectedFavoriteBooks);
+        // Assertions to verify the deep copy
+        assertNotSame(original, copied, "The copied object should not be the same as the original object.");
+        assertEquals(original.getName(), copied.getName(), "Names should be equal.");
+        assertEquals(original.getAge(), copied.getAge(), "Ages should be equal.");
+        assertNotSame(original.getFavoriteBooks(), copied.getFavoriteBooks(), "The list of favorite books should not be the same object.");
+        assertEquals(original.getFavoriteBooks(), copied.getFavoriteBooks(), "The contents of the list of favorite books should be equal.");
 
-        Man copiedMan = CopyUtils.deepCopy(originalMan);
+        // Modify original object's list
+        original.getFavoriteBooks().add("Pride and Prejudice");
 
-        assertNotSame(originalMan, copiedMan);
-        assertEquals(originalMan.getName(), copiedMan.getName());
-        assertEquals(originalMan.getAge(), copiedMan.getAge());
-        assertEquals(originalMan.getFavoriteBooks(), copiedMan.getFavoriteBooks());
-
-        List<String> modifiedFavoriteBooks = List.of("War and Peace", "The Great Gatsby");
-        originalMan.setFavoriteBooks(modifiedFavoriteBooks);
-
-        assertNotEquals(originalMan.getFavoriteBooks(), copiedMan.getFavoriteBooks());
+        // Verify copied object's list remains unchanged
+        assertFalse(copied.getFavoriteBooks().contains("Pride and Prejudice"), "The copied object's list should not reflect changes to the original object's list.");
     }
 
     @Test
-    void deepCopyRecursiveNode() {
-        RecursiveNode originalNode = new RecursiveNode("id1");
-        RecursiveNode childNode = new RecursiveNode("id2");
-        originalNode.addChild(childNode);
+    void testDeepCopyWithCyclicDependency() {
+        // Create the root node
+        TreeNode root = new TreeNode("root");
 
-        RecursiveNode copiedNode = CopyUtils.deepCopy(originalNode);
+        // Create a child node
+        TreeNode child = new TreeNode("child");
 
-        assertNotSame(originalNode, copiedNode);
-        assertFalse(copiedNode.getChildren().isEmpty());
-        assertNotSame(originalNode.getChildren().get(0), copiedNode.getChildren().get(0));
-        assertEquals(originalNode.getChildren().get(0).getValue(), copiedNode.getChildren().get(0).getValue());
+        // Add child to root
+        root.addChild(child);
+
+        // Create cyclic dependency: child node has a reference back to the root
+        child.addChild(root);
+
+        // Perform deep copy
+        TreeNode copiedRoot = CopyUtils.deepCopy(root);
+
+        // Assertions to verify the deep copy
+        assertNotNull(copiedRoot);
+        assertEquals(root.getValue(), copiedRoot.getValue());
+        assertEquals(root.getChildren().size(), copiedRoot.getChildren().size());
+        assertEquals(root.getChildren().getFirst().getValue(), copiedRoot.getChildren().getFirst().getValue());
+
+        // Verify that the cyclic dependency is preserved in the copy
+        TreeNode copiedChild = copiedRoot.getChildren().getFirst();
+        assertNotSame(root, copiedRoot); // Ensure root is a deep copy
+        assertNotSame(child, copiedChild); // Ensure child is a deep copy
+
+        // Verify the copied structure does not reference the original structure
+        assertNotSame(root.getChildren().getFirst(), copiedRoot.getChildren().getFirst());
+        // Verify cyclic dependency in the copied structure
+        assertSame(copiedRoot, copiedRoot.getChildren().getFirst().getChildren().getFirst());
     }
 
     @Test
-    void testDeepCopyNestedList() {
-        // Create a new NestedList instance and add some lists
-        NestedList originalNestedList = new NestedList();
-        ArrayList<Integer> sublist1 = new ArrayList<>();
-        sublist1.add(1);
-        sublist1.add(2);
-        sublist1.add(3);
-        originalNestedList.addList(sublist1);
+    void testDeepCopyNestedCollection() {
+        NestedCollection original = new NestedCollection();
+        original.getCollectionList().add(Arrays.asList("One", "Two", "Three"));
+        original.getCollectionList().add(new HashSet<>(Arrays.asList(1, 2, 3)));
+        original.getCollectionMap().put("List", new ArrayList<>(Arrays.asList("A", "B", "C")));
+        original.getCollectionMap().put("Set", new HashSet<>(Arrays.asList(4, 5, 6)));
 
-        ArrayList<String> sublist2 = new ArrayList<>();
-        sublist2.add("a");
-        sublist2.add("b");
-        sublist2.add("c");
-        originalNestedList.addList(sublist2);
+        NestedCollection copied = CopyUtils.deepCopy(original);
 
-        NestedList copiedNestedList = CopyUtils.deepCopy(originalNestedList);
-
-        // Assert that the original and copied lists are not the same object
-        assertNotSame(originalNestedList, copiedNestedList);
-
-        // Assert that the lists inside original and copied list are not same
-        for (int i = 0; i < originalNestedList.getList().size(); i++) {
-            assertNotSame(originalNestedList.getList().get(i), copiedNestedList.getList().get(i));
-        }
-
-        // Assert the data in original and copied lists are same but not the same reference
-        assertEquals(originalNestedList.getList(), copiedNestedList.getList());
-
-        // If we modify original, it shouldn't affect the copy
-        ((List<Integer>) originalNestedList.getList().getFirst()).add(4);
-        assertNotEquals(originalNestedList.getList(), copiedNestedList.getList());
+        // Assertions
+        assertNotSame(original, copied);
+        assertNotSame(original.getCollectionList(), copied.getCollectionList());
+        assertNotSame(original.getCollectionMap(), copied.getCollectionMap());
+        assertEquals(original.getCollectionList(), copied.getCollectionList());
+        assertEquals(original.getCollectionMap(), copied.getCollectionMap());
     }
 }
