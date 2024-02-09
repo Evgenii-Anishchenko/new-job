@@ -10,14 +10,17 @@ import java.util.HashSet;
 
 public class CopyUtilsDemo {
 
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+
     public static void main(String[] args) {
-        System.out.println(" \n\n ******* DEEP COPY SIMPLE CLASS \n\n ");
+        System.out.println(ANSI_BLUE + " \n\n ******* DEEP COPY SIMPLE CLASS ******* \n\n " + ANSI_RESET);
         simpleObjectDemo();
-        System.out.println(" \n\n ******* DEEP COPY OF CYCLIC DEPENDENCY \n\n ");
+        System.out.println(ANSI_BLUE + " \n\n ******* DEEP COPY OF CYCLIC DEPENDENCY ******* \n\n " + ANSI_RESET);
         cyclicDependencyDemo();
-        System.out.println(" \n\n ******* DEEP COPY OF NESTED COLLECTIONS \n\n ");
+        System.out.println(ANSI_BLUE + " \n\n ******* DEEP COPY OF NESTED COLLECTIONS ******* \n\n " + ANSI_RESET);
         nestedCollectionDemo();
-        System.out.println(" \n\n ******* THE END OF THE DEMO ******* \n\n ");
+        System.out.println(ANSI_BLUE + " \n\n ******* THE END OF THE DEMO ******* \n\n " + ANSI_RESET);
     }
 
     private static void simpleObjectDemo() {
